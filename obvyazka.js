@@ -10,7 +10,7 @@ var HEADER_LENGTH = 3;
 var MAX_MSG_LEN = 65500;
 
 //connectionHanler вызывается на on('connection')
-function Server(connectionHandler,helo_phrase)
+function Server(connectionHandler)
 {
 	var s = new nodeServer();
 
@@ -74,28 +74,11 @@ function Server(connectionHandler,helo_phrase)
 		});
 
 		function firstRequestListener(dataReceived){
-			//FIXME what if client send MANY data in HELO
-			var args;
-			dataReceived = dataReceived.toString();
-			if(/policy-file-request/.test( dataReceived )){
+			var stringReceived = dataReceived.toString();
+			if(/policy-file-request/.test( stringReceived )){
 				c.end(getCrossdomainString());
+				return;
 			}
-			else{
-				args = dataReceived.split( ' ' );
-				
-				if ( args[0] !== helo_phrase )
-				{
-					//
-					//  Закрываем сокет
-					//
-					log(' Bad HELO ' + args[0]);
-					c.emit('badhelo');
-					c.destroy();
-					return;
-				}
-			}
-			c.removeListener( 'data', firstRequestListener );
-			c.on( 'data', mainSocketListener );
 
 			c.sendU = function(type,str)
 			{
@@ -117,8 +100,12 @@ function Server(connectionHandler,helo_phrase)
 				sendMessage(c,'J',buf.length,buf);
 			};
 
-			args.shift();
-			connectionHandler(c,args);
+			mainSocketListener(dataReceived);
+
+			c.removeListener( 'data', firstRequestListener );
+			c.on( 'data', mainSocketListener );
+
+			connectionHandler(c);
 		}
 
 		function sendMessage(c,pre,len,msg)
@@ -166,7 +153,17 @@ function Server(connectionHandler,helo_phrase)
 			while (receiveBuffer.length > HEADER_LENGTH)
 			{
 				format = receiveBuffer.toString('utf8',0,1);
+				if (! isCorrectFormat(format)){
+					c.end();
+					return;
+				}
+
 				length = receiveBuffer.readUInt16LE(1);
+				if (length > MAX_MSG_LEN){
+					c.end();
+					return;
+				}
+
 				if (length <= receiveBuffer.length-3){
 					receiveBuffer = receiveBuffer.slice(3);
 					message = receiveBuffer.slice(0,length);
@@ -181,6 +178,10 @@ function Server(connectionHandler,helo_phrase)
 					return;
 				}
 			}
+		}
+
+		function isCorrectFormat(format){
+			return (["U","R","J"].indexOf(format) !== -1);
 		}
 
 		function translateMessage(f,m)
@@ -208,6 +209,7 @@ function Server(connectionHandler,helo_phrase)
 				break;
 			default:
 				log("unknown message format");
+				log("Connection should be dead already");
 				return;
 			}
 			c.emit(type,obj);
