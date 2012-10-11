@@ -212,7 +212,6 @@ function Server(connectionHandler)
 				log("Connection should be dead already");
 				return;
 			}
-			console.log("RE: " + type + " " + obj);
 			c.emit(type,obj);
 			
 		}
