@@ -100,12 +100,12 @@ function Server(connectionHandler)
 				sendMessage(c,'J',buf.length,buf);
 			};
 
+			connectionHandler(c);
+
 			mainSocketListener(dataReceived);
 
 			c.removeListener( 'data', firstRequestListener );
 			c.on( 'data', mainSocketListener );
-
-			connectionHandler(c);
 		}
 
 		function sendMessage(c,pre,len,msg)
