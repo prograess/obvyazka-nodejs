@@ -14,9 +14,9 @@ function Server(connectionHandler)
 {
 	var s = new nodeServer();
 
-	this.listen = function(port)
+	this.listen = function(port,host)
 	{
-		s.listen(port);
+		s.listen(port,host);
 	};
 
 	s.on('listening',function()
