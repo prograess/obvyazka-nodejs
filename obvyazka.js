@@ -142,7 +142,14 @@ function Server(connectionHandler)
 
 			receiveBuffer = Buffer.concat([receiveBuffer,data],receiveBuffer.length+data.length);
 
-			translateMessageCycle();
+			try
+			{
+				translateMessageCycle();
+			}
+			catch(err)
+			{
+				console.log("OBVYAZKA FATAL ERROR! \n" + err.stack() );
+			}
 		}
 
 		function translateMessageCycle()
