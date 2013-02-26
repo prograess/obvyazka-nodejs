@@ -154,7 +154,7 @@ function extendSocket(c, callback) {
         }
         catch(err)
         {
-            console.log("OBVYAZKA FATAL ERROR! \n" + err + "\n" + + err.stack );
+            console.log("OBVYAZKA FATAL ERROR! \n" + err + "\n" + err.stack );
         }
     }
 
